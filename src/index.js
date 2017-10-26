@@ -11,6 +11,7 @@ const RangePicker = React.createClass({
   propTypes: {
     startDate: React.PropTypes.object.isRequired,
     endDate: React.PropTypes.object.isRequired,
+    presets: React.PropTypes.array,
     onRangeChange: React.PropTypes.func.isRequired
   },
 
@@ -67,6 +68,17 @@ const RangePicker = React.createClass({
 
   },
 
+  _onSetRange: function(newStart, newEnd) {
+    this.props.onRangeChange({
+      startDate: newStart,
+      endDate: newEnd
+    });
+    this.setState({
+      currentlyEditing: null,
+      inspecting: null
+    });
+  },
+
   _getHighlightedRange: function() {
 
     // 'inspecting' is the calendar day the user is currently hovering over
@@ -95,6 +107,24 @@ const RangePicker = React.createClass({
 
   },
 
+  _renderSelectionControl: function() {
+    if(this.props.presets) {
+      return React.createElement(PresetPicker, {
+        presets: this.props.presets,
+        onSelectDateRange: function(start, end) { this._onSetRange(start, end) }.bind(this)
+      });
+    }
+
+    return React.createElement(Calendar, {
+      ref:'calendar',
+      highlighted: this._getHighlightedRange(),
+      initialDay: this.state.currentlyEditing === 'start' ?
+        this.props.startDate : this.props.endDate,
+      onInspectDate: function(day) { this.setState({ inspecting: day }) }.bind(this),
+      onSelectDate: function(day) { this._onChange(day) }.bind(this)
+    });
+  },
+
   render: function() {
     const startDate = this.props.startDate;
     const endDate = this.props.endDate;
@@ -120,16 +150,7 @@ const RangePicker = React.createClass({
             }.bind(this)
           }
         ),
-        currentlyEditing ? React.createElement(Calendar,
-          {
-            ref:'calendar',
-            highlighted: this._getHighlightedRange(),
-            initialDay: this.state.currentlyEditing === 'start' ?
-                this.props.startDate : this.props.endDate,
-            onInspectDate: function(day) { this.setState({ inspecting: day }) }.bind(this),
-            onSelectDate: function(day) { this._onChange(day) }.bind(this)
-          }
-        ) : null
+        currentlyEditing ? this._renderSelectionControl() : null
       )
     );
   }
@@ -185,6 +206,33 @@ const RangePickerInput = React.createClass({
             },
               moment(props.endDate).format('MM/DD/YYYY')
           )
+        )
+      )
+    )
+  }
+})
+
+const PresetPicker = React.createClass({
+  propTypes: {
+    presets: React.PropTypes.array.isRequired,
+    onSelectDateRange: React.PropTypes.func.isRequired
+  },
+  getInitialState: function() {
+    return {};
+  },
+  render: function() {
+    const props = this.props;
+    return (
+      div({ className: 'dr-selections'},
+        div({ className: 'dr-calendar'},
+          ul({ },
+            props.presets.map(function(preset) {
+              return li({
+                key: `preset-${preset.label.replace(' ','-')}`,
+                onClick: function() { props.onSelectDateRange(preset.start, preset.end) }
+              }, preset.label)
+            })
+            )
         )
       )
     )

@@ -29,7 +29,23 @@ var App = React.createClass({
         },
         startDate: this.state.startDate,
         endDate: this.state.endDate
-    })
+    }),
+      React.createElement(RangePicker, {
+        onRangeChange: function(dates) {
+          _this.setState(dates);
+        },
+        startDate: this.state.startDate,
+        endDate: this.state.endDate,
+        presets: [{
+          label: 'Last month',
+          start: moment().subtract(1, 'month').startOf('month'),
+          end: moment().subtract(1, 'month').endOf('month')
+        },{
+          label: 'Last year',
+          start: moment().subtract(1, 'year').startOf('year'),
+          end: moment().subtract(1, 'year').endOf('year')
+        }]
+      })
     )
   }
 })
